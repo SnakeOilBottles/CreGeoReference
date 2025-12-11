@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "CreGeoReference"
+version = "0.0.1"
+authors = [
+  { name="Michael Kahle", email="michael.kahle@yahoo.de" },
+]
+description = "A Geo Referencer"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+license = {file = "LICENSE"}
+dependencies = [
+  "geojsonio", "shapely","geopandas","pandas"
+]
+[project.urls]
+Homepage = "https://github.com/SnakeOilBottles/CreGeoReference"
+Issues = "https://github.com/SnakeOilBottles/CreGeoReference/issues"
+
+
