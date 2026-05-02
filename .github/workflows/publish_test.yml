@@ -1,0 +1,64 @@
+name: '02 - Publish to TestPyPI of CreGeoReference'
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    outputs:
+      pkg_version: ${{ steps.pkg-version.outputs.PKG_VERSION }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Set version
+      id: pkg-version
+      run: echo "PKG_VERSION=$(grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
+
+    - name: Run tests
+      run: ./test_local.sh
+
+    - name: Install pypa/build
+      run: >-
+        python3 -m
+        pip install
+        build
+        --user
+    - name: Build a binary wheel and a source tarball
+      run: python3 -m build
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  publish-to-testpypi:
+    name: Publish CreGeoReference to TestPyPI
+    needs:
+    - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/CreGeoReference
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+
+

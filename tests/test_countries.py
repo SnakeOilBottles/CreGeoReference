@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from CreGeoReference.GeoReference import GeoReference
+from CreGeoReference.geoTools import geoTools
 import CreGeoReference
 from importlib.metadata import version
 
@@ -11,14 +11,14 @@ class TestCountries(TestCase):
         self.assertEqual('Version', 'Version')
 
     def test_country_remote(self):
-        gf = GeoReference(local=False)
+        gf = geoTools(local=False)
         countries = gf.getCountriesNameByCoords(48,7.85)
         print(countries)
         self.assertEqual(len(countries), 1)
         self.assertEqual(countries[0], 'Germany')
 
     def test_country_local(self):
-        gf = GeoReference(local=True)
+        gf = geoTools(local=True)
         countries = gf.getCountriesNameByCoords(48,7.85)
         print(countries)
         self.assertEqual(len(countries), 1)
@@ -26,7 +26,7 @@ class TestCountries(TestCase):
 
 
     def test_language(self):
-        gf = GeoReference()
+        gf = geoTools()
         countries = gf.getCountriesNameByLanguage('de')
         print(countries)
         self.assertTrue(len(countries)>0)

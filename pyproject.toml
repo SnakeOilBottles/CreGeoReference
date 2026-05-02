@@ -18,7 +18,8 @@ classifiers = [
 ]
 license = {file = "LICENSE"}
 dependencies = [
-  "geojsonio", "shapely","geopandas","pandas"
+  "geojsonio", "shapely","geopandas>=0.9","pandas","geocoder","fiona==1.9.6" #Works for crePython:2020.0
+  # "geojsonio", "shapely","geopandas>=0.14.4","pandas","geocoder" #Works for crePython:2022.0
 ]
 [project.urls]
 Homepage = "https://github.com/SnakeOilBottles/CreGeoReference"
