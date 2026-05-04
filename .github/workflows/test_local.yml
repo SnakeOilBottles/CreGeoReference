@@ -13,22 +13,19 @@ jobs:
   build:
     name: Build distribution
     runs-on: ubuntu-latest
+    container:
+      image: credocker/crepython:2020.0
     outputs:
       pkg_version: ${{ steps.pkg-version.outputs.PKG_VERSION }}
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.x"
+#    - name: Set up Python
+#      uses: actions/setup-python@v5
+#      with:
+#        python-version: "3.x"
     - name: Set version
       id: pkg-version
       run: echo "PKG_VERSION=$(grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
-
-    - name: Install libgdal-dev
-      run: (apt-get -y --no-install-recommends install libgdal-dev)
-    - name: Install gdal
-      run: pip3 install gdal==$(gdal-config --version)
 
     - name: Run tests locally
       run: ./test_local.sh

@@ -16,20 +16,19 @@ jobs:
 #        NEWSAPI_KEY:  ${{ secrets.NEWSAPI_KEY }}
 #        RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         GEONAMES_KEY: ${{ secrets.GEONAMES_KEY }}  
-      volumes:
-        - ${{ github.workspace }}:/cre/python/CreGeoReference
+#      volumes:
+#        - ${{ github.workspace }}:/cre/python/CreGeoReference
 
+    outputs:
+      pkg_version: ${{ steps.pkg-version.outputs.PKG_VERSION }}
     steps:
-      - name: workspace
-        run: echo ${{ github.workspace }}
-      - name: cd
-        run: cd /cre/python/CreGeoReference/ 
-      - name: pwd
-        run: pwd 
-      - name: ls
-        run:  ls -l /cre/python/CreGeoReference/
-      - name: run docker in docker
-        run: /cre/python/CreGeoReference/test_local.sh 
+    - uses: actions/checkout@v4
+    - name: Set version
+      id: pkg-version
+      run: echo "PKG_VERSION=$(grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
+
+    - name: Run tests locally
+      run: ./test_local.sh
 
 
 
