@@ -2,7 +2,7 @@
 
 ##pip3 install geocoder geopandas==0.9
 
-# sudo docker container run  --volume ./:/cre/python/CreGeoReference  --workdir /cre/python/CreGeoReference/ credocker/crepython:2020.0 /cre/python/CreGeoReference/test_local.sh
+# sudo docker container run  --rm --volume ./:/cre/python/CreGeoReference  --workdir /cre/python/CreGeoReference/ credocker/crepython:2020.0 /cre/python/CreGeoReference/test_local.sh
 
 
 pip3 install ../CreGeoReference/

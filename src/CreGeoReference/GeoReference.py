@@ -16,7 +16,7 @@ class GeoReference():
     gT = None
     allParameters = ['phrase','language','latitude','longitude','gnd','geonames','geotype','country','ipcc','continent']
 
-    def __init__(self, phrase=None, language=None, latitude=None, longitude=None, geonames=None, local=False):
+    def __init__(self, phrase=None, language=None, latitude=None, longitude=None, geonames=None, gnd=None, local=False):
         # https://stackoverflow.com/questions/1270951/how-to-refer-to-relative-paths-of-resources-when-working-with-a-code-repository
         # https://stackoverflow.com/questions/918154/relative-paths-in-python 
         ## TEST_FILENAME = os.path.join(os.path.dirname(__file__), 'test.txt')
@@ -28,7 +28,7 @@ class GeoReference():
  
         self.parameters = {'phrase':phrase,'language':language,
                            'latitude':latitude,'longitude':longitude,
-                           'geonames':geonames}
+                           'geonames':geonames, 'gnd':gnd}
         self.initializeParameters()
 
     def initializeParameters(self):
@@ -88,10 +88,45 @@ class GeoReference():
               noChange = False  
             # 'variantName' & 'preferredName'
 
+        if(self.parameters['gnd']): #no costs
+          result = searchGndByGnd(self.parameters['gnd'])
+          print(result)
+          if(result): 
+            if(('preferredName' in result) and (not self.parameters['phrase'])):
+              self.parameters['phrase'] = result['preferredName']
+              noChange = False
+            if(('geonames' in result) and (not self.parameters['geonames'])):
+              self.parameters['geonames'] = result['geonames']
+              noChange = False
+            if(('latitude' in result) and (not self.parameters['latitude'])):
+              self.parameters['latitude'] = result['latitude']
+              noChange = False
+            if(('longitude' in result) and (not self.parameters['longitude'])):
+              self.parameters['longitude'] = result['longitude']
+              noChange = False  
+            # 'variantName' & 'preferredName'
 
 
-        if(('gnd' in parameters) and (not self.parameters['gnd'])):
-          todo = 1 # searchGeonamesByNameAndLanguage #limited
+        if((('gnd' in parameters) and (not self.parameters['gnd'])) or
+           (('geotype' in parameters) and (not self.parameters['geotype']))
+          ):
+          if(self.parameters['phrase'] and self.parameters['language']):
+            result = searchGeonamesByNameAndLanguage(self.parameters['phrase'], self.parameters['language']) #limited
+            print(result)
+            if(result): 
+              if(('geotype' in result) and (not self.parameters['geotype'])):
+                self.parameters['geotype'] = result['geotype']
+                noChange = False
+              if(('geonames' in result) and (not self.parameters['geonames'])):
+                self.parameters['geonames'] = result['geonames']
+                noChange = False
+              if(('latitude' in result) and (not self.parameters['latitude'])):
+                self.parameters['latitude'] = result['latitude']
+                noChange = False
+              if(('longitude' in result) and (not self.parameters['longitude'])):
+                self.parameters['longitude'] = result['longitude']
+                noChange = False  
+
 
         if(self.parameters['latitude'] and self.parameters['longitude'] and GeoReference.gT): 
           if(('country' in parameters) and (not self.parameters['country'])):
@@ -120,23 +155,31 @@ class GeoReference():
 
 #geonames & secrets or env
 geonamesKey = os.getenv('GEONAMES_KEY')
+if('123' == geonamesKey):
+  geonamesKey = None
+  print('Please set GEONAMES_KEY in mysecrets.py')
+
 
 #geonames
 def searchGeonamesByNameAndLanguage(phrase, lang):
-    result = {}
-    gn = geocoder.geonames(phrase, lang=lang, key=geonamesKey)
-    print([phrase,gn,gn.geonames_id]) 
-    if(gn.geonames_id):  
-      result['geonames'] = int(gn.geonames_id)
-      result['latitude'] = float(gn.lat)
-      result['longitude'] = float(gn.lng)
-      result['geotype'] = gn.feature_class
-      ##df.loc[index,'country'] = gn.country  #localized!
-      gne = geocoder.geonames(phrase, lang=lang, key=geonamesKey)
-      if(gne.country):
-        result['country'] = gne.country
-        print(gne.country)
-        print(['geo',gn.lat,gn.lng, gn.geonames_id, gn])
+    result = None
+    if(geonamesKey):
+      result = {}
+      gn = geocoder.geonames(phrase, lang=lang, key=geonamesKey)
+      print([phrase,gn,gn.geonames_id]) 
+      if(gn.geonames_id):  
+        result['geonames'] = int(gn.geonames_id)
+        result['latitude'] = float(gn.lat)
+        result['longitude'] = float(gn.lng)
+        result['geotype'] = gn.feature_class
+        '''
+        ##df.loc[index,'country'] = gn.country  #localized!
+        gne = geocoder.geonames(phrase, lang=lang, key=geonamesKey)
+        if(gne.country):
+          result['country'] = gne.country
+          print(gne.country)
+          print(['geo',gn.lat,gn.lng, gn.geonames_id, gn])
+        '''
     return result
 
 #gnd
@@ -202,6 +245,49 @@ def searchGndWithCoordsAndGeonamesByName(locationName, strict=True):
                return result
              if(not strict):
                return searchGndWithCoordsAndGeonamesByName(locationName, False)
+    return None
+
+#gnd
+def searchGndByGnd(gnd):
+    gndurl = 'https://lobid.org/gnd/search?q='+str(gnd)+'&filter=type%3APlaceOrGeographicName&size=100&format=json'   
+    gndurl = 'https://lobid.org/gnd/search?q='+str(gnd)+'&filter=type%3APlaceOrGeographicName&size=100&format=json' 
+
+    page = requests.get(gndurl, timeout=60)
+    if page.status_code == 200:
+      content = page.content
+      #print(content)
+      if(content):
+        #print(content)
+        jsonData = json.loads(content)
+        #print(jsonData)      #'variantName' !
+        if('member' in jsonData):
+          for member in jsonData['member']:
+           if('gndIdentifier' in member):
+             if(member['gndIdentifier'] == str(gnd)):
+                     result = {'gndId':member['gndIdentifier']} 
+                     #print(member['gndIdentifier']) 
+                     #print(25*"=*")
+                     #print(member)  
+                     if('hasGeometry' in member):
+                       #print(member['hasGeometry']) 
+                       latitude = None
+                       longitude = None
+                       for geo in member['hasGeometry']:  
+                         if('asWKT' in geo and 'type' in geo and geo['type']=='Point'):
+                            point = geo['asWKT'][0]
+                            point = point.replace('Point ','').strip().strip('()').strip()
+                            #print(point)
+                            coords = point.split(" ")
+                            #print(coords)
+                            result['longitude'] = float(coords[0])
+                            result['latitude'] = float(coords[1])
+                     if('variantName' in member):
+                       #print(member['variantName']) 
+                       result['variantNames'] = member['variantName']  
+                     if('preferredName' in member):
+                       #print(member['preferredName'])
+                       result['preferredName'] = member['preferredName']
+                     return result
     return None
 
 #gnd
