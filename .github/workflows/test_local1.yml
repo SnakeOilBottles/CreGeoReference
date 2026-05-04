@@ -1,0 +1,49 @@
+name: '01a - Local test of CreGeoReference'
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+  schedule:
+#    Sunday 2:05 #m h d/m m d/w 
+    - cron:  '05 2 * * 0'
+
+jobs:
+
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    container:
+      image: credocker/crepython:2020.0
+    outputs:
+      pkg_version: ${{ steps.pkg-version.outputs.PKG_VERSION }}
+    steps:
+    - uses: actions/checkout@v4
+#    - name: Set up Python
+#      uses: actions/setup-python@v5
+#      with:
+#        python-version: "3.x"
+    - name: Set version
+      id: pkg-version
+      run: echo "PKG_VERSION=$(grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
+
+    - name: Run tests locally
+      run: ./test_local.sh
+
+    - name: Install pypa/build
+      run: >-
+        python3 -m
+        pip install
+        build
+        --user
+    - name: Build a binary wheel and a source tarball
+      run: python3 -m build
+#    - name: Store the distribution packages
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: python-package-distributions
+#        path: dist/
+
+
+
+
