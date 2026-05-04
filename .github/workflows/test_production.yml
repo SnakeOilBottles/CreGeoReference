@@ -22,11 +22,6 @@ jobs:
       id: pkg-version
       run: echo "PKG_VERSION=$(grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
 
-    - name: Install libgdal-dev
-      run: (apt-get -y --no-install-recommends install libgdal-dev)
-    - name: Install gdal
-      run: pip3 install gdal==$(gdal-config --version)
-
     - name: Run tests with official production version
       run: ./test_production.sh
 
